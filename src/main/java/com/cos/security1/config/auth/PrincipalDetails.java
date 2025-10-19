@@ -2,11 +2,15 @@ package com.cos.security1.config.auth;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Map;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import com.cos.security1.model.User;
+
+import lombok.Data;
 
 /**
  * 시큐리티가 /login을 낚아채서 로그인 진행
@@ -20,13 +24,23 @@ import com.cos.security1.model.User;
  * 시큐리티 세션 객체 => Authentication 객체 -> UserDetails
  *
  */
-public class PrincipalDetails implements UserDetails{
+@Data
+public class PrincipalDetails implements UserDetails, OAuth2User{
 
 	private User user; //컴포지션
 
+	//일반 로그인 시 받는 곳
 	public PrincipalDetails(User user) {
 		this.user = user;
 	}
+
+	//구글 로그인 시 받는 곳
+	public PrincipalDetails(User user, Map<String, Object> attributes) {
+		this.user = user;
+		this.attributes = attributes;
+	}
+
+	private Map<String, Object> attributes; //Oauth2User안에 들어있는 객체를 받기 위한 변수
 
 	//해당 유저의 권한을 리턴
 	@Override
@@ -80,5 +94,15 @@ public class PrincipalDetails implements UserDetails{
 		 */
 
 		return true;
+	}
+
+	@Override
+	public Map<String, Object> getAttributes() {
+		return attributes;
+	}
+
+	@Override
+	public String getName() {
+		return (String) attributes.get("sub");
 	}
 }
